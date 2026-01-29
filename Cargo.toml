@@ -1,0 +1,10 @@
+[package]
+name = "proxy-pulse-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.55", features = ["derive"] }
+colored = "3.1.1"
+heck = "0.5.0"
+rand = "0.9.2"
