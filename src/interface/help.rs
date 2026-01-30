@@ -1,10 +1,10 @@
-use super::Cli;
 use clap::CommandFactory;
-use clap::error::ErrorKind;
 use colored::*;
-use heck::{AsSnekCase, AsTitleCase};
+use heck::{AsSnakeCase, AsTitleCase};
 use rand::seq::IndexedRandom;
 use std::fmt::Write;
+
+use crate::cli::Cli;
 
 const ASCII_HEADER: &str = r#"
 
@@ -21,50 +21,7 @@ $$ |      $$ |      \$$$$$$  |$$  /\$$\ \$$$$$$$ |      $$ |      \$$$$$$  |$$ |
                                          \______/                                    
     "#;
 
-pub fn cli_error(err: clap::Error) {
-    match err.kind() {
-        ErrorKind::DisplayHelp => {
-            cli_help();
-        }
-        ErrorKind::DisplayVersion => {
-            println!(
-                "{} {}",
-                env!("CARGO_PKG_NAME").blue().bold(),
-                env!("CARGO_PKG_VERSION").cyan()
-            );
-        }
-        _ => {
-            error_formatter(err.to_string());
-        }
-    }
-}
-
-fn error_formatter(err_str: String) {
-    let mut format_buff = String::new();
-
-    err_str
-        .split("\n\n")
-        .filter(|line| !line.is_empty())
-        .for_each(|error_line| {
-            if let Some((head, content)) = error_line.split_once(' ') {
-                let _ = match head.to_lowercase().as_str() {
-                    "error:" => {
-                        writeln!(format_buff, "{} {}\n", "Error:".red(), content.bright_red())
-                    }
-                    "usage:" => writeln!(format_buff, "{} {}\n", "Usage:".yellow(), content.cyan()),
-                    _ => writeln!(
-                        format_buff,
-                        "{}",
-                        "For more information, try '--help'.".blue()
-                    ),
-                };
-            }
-        });
-
-    println!("{}", format_buff);
-}
-
-fn cli_help() {
+pub fn cli_help() {
     let mut custom_help_buff = String::new();
     let mut cmd = Cli::command();
     let max_len_long_flag_col = cmd
@@ -153,7 +110,7 @@ fn cli_help() {
     println!("{}", custom_help_buff);
 }
 
-pub fn random_color_ascii_header() -> String {
+fn random_color_ascii_header() -> String {
     let colors = [
         Color::Red,
         Color::Green,
@@ -175,14 +132,14 @@ pub fn random_color_ascii_header() -> String {
         .collect()
 }
 
-pub fn app_info_banner() -> String {
+fn app_info_banner() -> String {
     let banner_padding = 5;
     let app_name = env!("CARGO_PKG_NAME");
     let app_version = env!("CARGO_PKG_VERSION");
     let info_text = format!(
         "{}Welcome to {} [v{}] Proxy Testing Tool",
         " ".repeat(banner_padding),
-        AsSnekCase(AsTitleCase(app_name).to_string()),
+        AsSnakeCase(AsTitleCase(app_name).to_string()),
         app_version
     );
     let banner_frame = "=".repeat(info_text.len() + banner_padding);

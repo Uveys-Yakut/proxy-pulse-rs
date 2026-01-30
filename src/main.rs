@@ -1,4 +1,5 @@
 mod cli;
+mod interface;
 
 use cli::cli_parse;
 
