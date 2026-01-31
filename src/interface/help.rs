@@ -1,3 +1,4 @@
+use clap::Arg;
 use clap::CommandFactory;
 use colored::*;
 use heck::{AsSnakeCase, AsTitleCase};
@@ -21,23 +22,45 @@ $$ |      $$ |      \$$$$$$  |$$  /\$$\ \$$$$$$$ |      $$ |      \$$$$$$  |$$ |
                                          \______/                                    
     "#;
 
+fn placeholder_format(arg: &Arg, has_value_arg: bool) -> String {
+    let default = if has_value_arg { "" } else { "  " };
+
+    let placeholders = match arg.get_value_names() {
+        Some(p) if arg.get_action().takes_values() => p,
+        _ => return default.to_string(),
+    };
+
+    let multiple = placeholders.len() > 1;
+
+    let mut out = String::new();
+
+    for (i, placeholder) in placeholders.iter().enumerate() {
+        out.push('<');
+        out.push_str(placeholder);
+        out.push('>');
+
+        if multiple && i + 1 < placeholders.len() {
+            out.push(' ');
+        }
+    }
+
+    out
+}
+
 pub fn cli_help() {
     let mut custom_help_buff = String::new();
     let mut cmd = Cli::command();
-    let max_len_long_flag_col = cmd
+    let args: Vec<_> = cmd
         .get_arguments()
-        .filter(|a| a.get_short().is_some())
-        .fold(0, |max_len, arg| {
-            let arg_id_len = arg.get_id().to_string().len();
-            let long_flag_len = arg.get_long().map_or(0, |l| l.len());
+        .filter(|a| a.get_short().is_some() || a.get_long().is_some())
+        .collect();
+    let has_value_arg = args.iter().any(|a| a.get_action().takes_values());
+    let max_len_long_flag_col = args.iter().fold(0, |max_len, arg| {
+        let placeholder_len = placeholder_format(arg, has_value_arg).len();
+        let long_flag_len = arg.get_long().map_or(0, |l| l.len());
 
-            max_len.max(arg_id_len + long_flag_len)
-        });
-    let has_value_arg = cmd
-        .get_arguments()
-        .filter(|a| a.get_action().takes_values())
-        .next()
-        .is_some();
+        max_len.max(placeholder_len + long_flag_len)
+    });
 
     writeln!(custom_help_buff, "{}", random_color_ascii_header()).unwrap();
     writeln!(custom_help_buff, "{}", app_info_banner()).unwrap();
@@ -55,15 +78,8 @@ pub fn cli_help() {
         .get_arguments()
         .filter(|a| a.get_short().is_some() || a.get_long().is_some())
     {
+        let placeholder_format = placeholder_format(arg, has_value_arg);
         let is_flag_type = arg.get_action().takes_values();
-        let placeholder = arg.get_id().to_string().to_uppercase();
-        let placeholder_format = is_flag_type
-            .then(|| format!("<{}>", placeholder))
-            .unwrap_or_else(|| {
-                has_value_arg
-                    .then_some("  ".to_string())
-                    .unwrap_or("".to_string())
-            });
         let required = arg.is_required_set().then_some(" (required)").unwrap_or("");
 
         arg.get_help().inspect(|help| {
@@ -73,7 +89,9 @@ pub fn cli_help() {
                 .inspect(|short| flags.push_str(&format!("-{}", short)));
             arg.get_long().inspect(|long| {
                 let placeholder_pad = is_flag_type
-                    .then(|| " ".repeat(max_len_long_flag_col - (long.len() + placeholder.len())))
+                    .then(|| {
+                        " ".repeat(max_len_long_flag_col - (long.len() + placeholder_format.len()))
+                    })
                     .unwrap_or_else(|| " ".repeat(max_len_long_flag_col - long.len()));
 
                 (!flags.is_empty()).then(|| flags.push_str(", "));
