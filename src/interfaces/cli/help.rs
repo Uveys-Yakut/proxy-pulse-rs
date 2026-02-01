@@ -5,7 +5,7 @@ use heck::{AsSnakeCase, AsTitleCase};
 use rand::seq::IndexedRandom;
 use std::fmt::Write;
 
-use crate::cli::Cli;
+use crate::interfaces::cli::Cli;
 
 const ASCII_HEADER: &str = r#"
 
@@ -85,8 +85,10 @@ pub fn cli_help() {
         arg.get_help().inspect(|help| {
             let mut flags = String::new();
 
-            arg.get_short()
-                .inspect(|short| flags.push_str(&format!("-{}", short)));
+            let short_flag = arg
+                .get_short()
+                .map_or_else(|| "    ".to_string(), |short| format!("-{}", short));
+            flags.push_str(&short_flag);
             arg.get_long().inspect(|long| {
                 let placeholder_pad = is_flag_type
                     .then(|| {
@@ -94,7 +96,10 @@ pub fn cli_help() {
                     })
                     .unwrap_or_else(|| " ".repeat(max_len_long_flag_col - long.len()));
 
-                (!flags.is_empty()).then(|| flags.push_str(", "));
+                if !flags.is_empty() && arg.get_short().is_some() {
+                    flags.push_str(", ")
+                };
+
                 flags.push_str(&format!(
                     "--{} {} {}",
                     long, placeholder_format, placeholder_pad

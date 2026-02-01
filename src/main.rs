@@ -1,10 +1,12 @@
-mod cli;
-mod interface;
+mod core;
+mod interfaces;
 
-use cli::cli_parse;
+use core::application::dto::AppInputDTO;
+use interfaces::cli::Cli;
 
 fn main() {
-    let cli = cli_parse();
+    let cli = Cli::parse_and_validate();
+    let app_dto = AppInputDTO::from_cli(cli);
 
-    println!("Input: {:#?}", cli);
+    println!("Input: {:#?}", app_dto);
 }
