@@ -1,12 +1,17 @@
 use clap::{ArgGroup, Parser, value_parser};
-use std::path::PathBuf;
+use std::{path::PathBuf, u16};
 use url::Url;
 
 use super::error::{Error, cli_error};
 
 #[derive(Debug, Parser)]
 #[command(version)]
-#[command(group(ArgGroup::new("input").required(true).multiple(false).args(["file", "proxies"])))]
+#[command(
+    group(ArgGroup::new("input")
+        .required(true)
+        .multiple(false)
+        .args(["file", "proxies"]))
+)]
 pub struct Cli {
     /// Path to the file containing the list of proxies
     #[arg(short, long)]
@@ -18,11 +23,23 @@ pub struct Cli {
     #[arg(short, long, default_value = "http://httpbin.org/ip")]
     pub url: Option<Url>,
     /// Timeout duration in second (1 - 10)
-    #[arg(short, long, value_name="SEC", default_value_t = 3, value_parser=value_parser!(u8).range(1..=10))]
+    #[arg(
+        short, 
+        long, 
+        value_name="SEC", 
+        default_value_t = 3, 
+        value_parser=value_parser!(u8).range(1..=10)
+    )]
     pub timeout: u8,
-    /// Number of proxies to test simultaneously (1 - 500)
-    #[arg(short, long, value_name="NUM", default_value_t = 100, value_parser=value_parser!(u16).range(1..=500))]
-    pub workers: u16,
+    /// Maximum number of concurrent proxy tests (1 - 500)
+    #[arg(
+        short='c', 
+        long="max-concurrent", 
+        value_name="NUM", 
+        default_value_t = 100, 
+        value_parser=value_parser!(u16).range(1..=500)
+    )]
+    pub max_concurrent: u16,
     /// Output directory for results
     #[arg(
         long = "out-dir",

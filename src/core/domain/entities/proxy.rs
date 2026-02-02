@@ -11,9 +11,9 @@ pub enum ProxyScheme {
 
 #[derive(Debug, Clone)]
 pub struct Proxy {
-    pub ip: IpAdress,
-    pub port: Port,
-    pub scheme: Option<ProxyScheme>,
+    ip: IpAdress,
+    port: Port,
+    scheme: Option<ProxyScheme>,
 }
 
 impl ProxyScheme {
@@ -30,6 +30,18 @@ impl ProxyScheme {
 }
 
 impl Proxy {
+    pub fn ip(&self) -> &IpAdress {
+        &self.ip
+    }
+
+    pub fn port(&self) -> &Port {
+        &self.port
+    }
+
+    pub fn scheme(&self) -> &Option<ProxyScheme> {
+        &self.scheme
+    }
+
     pub fn new(ip: IpAdress, port: Port, scheme: Option<ProxyScheme>) -> Self {
         Self {
             ip: ip,
@@ -37,6 +49,7 @@ impl Proxy {
             scheme: scheme,
         }
     }
+
     pub fn from_str(s: &str) -> Result<Proxy, DomainError> {
         let mut scheme = None;
         let mut remainder = s;

@@ -6,7 +6,6 @@ pub enum Error {
     InvalidScheme(String),
     InvalidIp(String),
     InvalidPort(String),
-    EmptyProxyList,
 }
 
 impl fmt::Display for Error {
@@ -40,14 +39,6 @@ impl fmt::Display for Error {
                         s
                     )
                     .bright_red()
-                )
-            }
-            Error::EmptyProxyList => {
-                write!(
-                    f,
-                    "{} {}",
-                    error_head,
-                    "No valid proxies provided".bright_red()
                 )
             }
         }

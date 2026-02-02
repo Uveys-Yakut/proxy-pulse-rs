@@ -120,7 +120,7 @@ pub fn cli_help() {
 
             writeln!(
                 custom_help_buff,
-                "{} {}{}{}",
+                "  {} {}{}{}",
                 flags.cyan(),
                 help.to_string().white(),
                 arg_default,
