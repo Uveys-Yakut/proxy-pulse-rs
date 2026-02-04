@@ -11,7 +11,6 @@ pub enum ValidationError {
     NotAFile(PathBuf),
     NotADirectory(PathBuf),
     DirectoryCreationFailed(PathBuf, std::io::Error),
-    UrlSchemeInvalid(String),
 }
 
 #[derive(Debug)]
@@ -104,14 +103,6 @@ impl fmt::Display for ValidationError {
                     error_head,
                     format!("Failed to create directory '{}': {}", path.display(), err)
                         .bright_red()
-                )
-            }
-            ValidationError::UrlSchemeInvalid(url) => {
-                write!(
-                    f,
-                    "{} {}",
-                    error_head,
-                    format!("URL must use http or https scheme, got '{}'", url).bright_red()
                 )
             }
         }

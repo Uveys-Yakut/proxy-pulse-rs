@@ -19,9 +19,6 @@ pub struct Cli {
     /// List of proxies to test (comma-separated if more than one)
     #[arg(short, long)]
     pub proxies: Option<String>,
-    /// Url to test against
-    #[arg(short, long, default_value = "http://httpbin.org/ip")]
-    pub url: Option<Url>,
     /// Timeout duration in second (1 - 10)
     #[arg(
         short, 

@@ -1,20 +1,51 @@
-use crate::core::application::Error as AppError;
-use crate::core::application::ports::ProxyRepository;
+use std::sync::Arc;
 
-pub struct ProxyTester<'a> {
-    repo: &'a dyn ProxyRepository,
+use futures::StreamExt;
+use futures::stream::FuturesUnordered;
+use tokio::sync::Semaphore;
+
+use crate::core::application::Error as AppError;
+use crate::core::application::ports::{ProxyRepository, ProxyTestPort};
+
+pub struct ProxyTester {
+    repo: Arc<dyn ProxyRepository>,
+    tester: Arc<dyn ProxyTestPort>,
+    max_concurrent: usize,
 }
 
-impl<'a> ProxyTester<'a> {
-    pub fn new(repo: &'a dyn ProxyRepository) -> Self {
-        Self { repo }
+impl ProxyTester {
+    pub fn new(
+        repo: Arc<dyn ProxyRepository>,
+        tester: Arc<dyn ProxyTestPort>,
+        max_concurrent: usize,
+    ) -> Self {
+        Self {
+            repo,
+            tester,
+            max_concurrent,
+        }
     }
 
-    pub async fn execute(&self, max_concurrent: usize) -> Result<(), AppError> {
-        let mut proxy_rx = self.repo.stream_proxies(max_concurrent).await?;
+    pub async fn execute(&self) -> Result<(), AppError> {
+        let mut proxy_rx = self.repo.stream_proxies(self.max_concurrent).await?;
+
+        let semaphore = Arc::new(Semaphore::new(self.max_concurrent));
+        let mut tasks = FuturesUnordered::new();
 
         while let Some(proxy) = proxy_rx.recv().await {
-            println!("Proxy: {:?}", proxy);
+            let permit = semaphore.clone();
+            let tester = self.tester.clone();
+
+            tasks.push(tokio::spawn(async move {
+                let _permit = permit.acquire().await.ok();
+                tester.test(proxy).await.ok()
+            }));
+        }
+
+        while let Some(res) = tasks.next().await {
+            if let Ok(Some(result)) = res {
+                println!("✅ {:?}", result);
+            }
         }
 
         Ok(())

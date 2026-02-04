@@ -18,14 +18,6 @@ impl Cli {
             }
         }
 
-        if let Some(url) = &self.url {
-            if url.scheme() != "http" && url.scheme() != "https" {
-                return Err(Error::Validation(ValidationError::UrlSchemeInvalid(
-                    url.to_string(),
-                )));
-            }
-        }
-
         if let Some(out_dir) = &self.out_dir {
             if out_dir.exists() {
                 if !out_dir.is_dir() {

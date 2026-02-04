@@ -1,6 +1,14 @@
 use colored::*;
 use std::fmt;
 
+#[derive(Debug)]
+pub enum ProxyTestError {
+    ConnectionFailed,
+    Timeout,
+    InvalidResponse,
+    TestFailed,
+}
+
 #[derive(Debug, Clone)]
 pub enum Error {
     InvalidScheme(String),
